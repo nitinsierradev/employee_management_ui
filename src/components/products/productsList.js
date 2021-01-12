@@ -153,7 +153,7 @@ const ProjectList = () => {
     return (
         <Card className="parent-div">
             <div className="display-flow-root">
-                <Button intent="primary" icon="add" text="Add Project" className="float-right" onClick={() => setDialog(true, 'add', {}, -1)} />
+                <Button intent="primary" icon="add" text="Add Project" className="float-right" onClick={() => setDialog(true, 'add', {phase:"PI"}, -1)} />
             </div>
             <table align="center" class="bp3-html-table bp3-html-table-bordered bp3-html-table-condensed bp3-html-table-striped ">
                 <thead>
