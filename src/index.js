@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import 'normalize.css/normalize.css';
 import "@blueprintjs/core/lib/css/blueprint.css";
+import 'bootstrap/dist/css/bootstrap.min.css';
 import client from './connection';
 
 import { ApolloProvider } from '@apollo/react-hooks';
