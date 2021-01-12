@@ -15,3 +15,15 @@ code {
 .float-right{
   float: right;
 }
+
+.parent-div{
+  width: 90%;
+  margin-left: 5%;
+  margin-top: 10px;
+}
+.display-flow-root {
+  display: flow-root;
+}
+.bp3-portal{
+  pointer-events: none;
+}

@@ -4,38 +4,50 @@ import { useQuery, useMutation } from "react-apollo";
 import { Icon, Dialog, Classes, Button, Code, H5, Intent, Switch, Tooltip, Card } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
-import { QUERY_PRODUCTS, MUTATION_ADD_PRODUCT, MUTATION_UPDATE_PRODUCT } from "../../core/queries";
+import { QUERY_PROJECTS, MUTATION_ADD_PROJECT, MUTATION_UPDATE_PROJECT } from "../../core/queries";
 import { isOpen } from "@blueprintjs/core/lib/esm/components/context-menu/contextMenu";
 
-const ProductList = () => {
+const ProjectList = () => {
     const initialVal = {
         isOpen: false,
         data: {},
         action: "read",
-        title: "Add Product"
+        title: "Add Project",
+        idx: -1
     }
 
     const phases = { "PI": "Project Initiation", "PP": 'Project Planning', "PE": 'Project Execution', "PMC": 'Project Monitoring and Control', "PC": 'Project Closed' };
 
     const [objData, setData] = useState(initialVal);
     const [dataList, setDataList] = useState([]);
-    const [createProject, projectData] = useMutation(MUTATION_ADD_PRODUCT);
-    const [updateProject, updateProjectData] = useMutation(MUTATION_UPDATE_PRODUCT);
-    const { loading, data, error } = useQuery(QUERY_PRODUCTS);
+    const [createProject, projectData] = useMutation(MUTATION_ADD_PROJECT);
+    const [updateProject, updateProjectData] = useMutation(MUTATION_UPDATE_PROJECT);
+    const { loading, data, error } = useQuery(QUERY_PROJECTS);
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>Error :(</p>;
 
-    const setDialog = (isOpen, action, item) => {
+    const setDialog = (isOpen, action, item, idx) => {
         let title = action == "edit" ? "Edit Project" : "Add Project";
         let updatedObj = {
             isOpen: isOpen,
             data: { ...item },
             action: action,
-            title: title
+            title: title,
+            idx: idx
         }
         if(updatedObj.data.estimatedDate){
-            updatedObj.data.estimatedDate = new Date(updatedObj.data.estimatedDate);
+            let dt = new Date(updatedObj.data.estimatedDate);
+            let day = dt.getDate();
+            let month = (dt.getMonth() + 1);
+            if (day < 10) {
+                day = "0" + day
+            }
+            if (month < 10) {
+                month = "0" + month
+            }
+            updatedObj.data.estimatedDate =  dt.getFullYear() + "-" + month + "-" + day;
+            
         }
         setData(updatedObj);
         // setAction(action);
@@ -58,7 +70,7 @@ const ProductList = () => {
             return phases[v]
         }
     }
-    const saveProduct = e => {
+    const saveProject = e => {
         e.preventDefault();
         let item = objData.data;
         let reqData = { 
@@ -70,16 +82,23 @@ const ProductList = () => {
         if (!item.id && item.name) {
             
             createProject({ variables: reqData }).then(response => {
-                setDialog(false, 'read', {});
+                setDialog(false, 'read', {}, -1);
                 let createItem = response.data.createProject.project;
                 let tempItem = {
                     id: createItem.id,
                     name: createItem.name,
-                    addedDate: createItem.addedDate
+                    addedDate: createItem.addedDate,
+                    description: createItem.description,
+                    phase: createItem.phase,
+                    estimatedDate: createItem.estimatedDate,
+                    closedDate: createItem.closedDate
                 };
                 // let dList = dataList;
                 data.allProject.push(tempItem);
-                // setDataList(data.allProject);
+                // dList.push(tempItem);
+                setTimeout(() => {
+                    setDataList(prevState => [...prevState, tempItem]);
+                }, 10)
             })
                 .catch(err => {
                     //handle error
@@ -88,8 +107,23 @@ const ProductList = () => {
         } else if (item.id && item.name) {
             reqData["id"] = item.id;
             updateProject({ variables: reqData }).then(response => {
-                setDialog(false, 'read', {});
-                let updateItem = response.data.createProject.project;
+                
+                let updateItem = response.data.updateProject.project;
+                let tempItem = {
+                    id: updateItem.id,
+                    name: updateItem.name,
+                    addedDate: updateItem.addedDate,
+                    description: updateItem.description,
+                    phase: updateItem.phase,
+                    estimatedDate: updateItem.estimatedDate,
+                    closedDate: updateItem.closedDate
+                };
+                let pData = [...dataList];
+                pData[objData.idx] = tempItem;
+                setTimeout(() => {
+                    setDataList(pData);
+                }, 10)
+                setDialog(false, 'read', {}, -1);
             })
                 .catch(err => {
                     //handle error
@@ -100,7 +134,7 @@ const ProductList = () => {
     if (!loading && !error && data && data.allProject) {
         setTimeout(() => {
             setDataList(data.allProject);
-        }, 100)
+        }, 0)
 
     }
     const manageDateFormat = d => {
@@ -117,11 +151,11 @@ const ProductList = () => {
         return day + "-" + month + "-" + dt.getFullYear();
     }
     return (
-        <Card>
-            <div>
-                <Button intent="primary" icon="add" text="Add Product" className="float-right" onClick={() => setDialog(true, 'add', {})} />
+        <Card className="parent-div">
+            <div className="display-flow-root">
+                <Button intent="primary" icon="add" text="Add Project" className="float-right" onClick={() => setDialog(true, 'add', {}, -1)} />
             </div>
-            <table class="bp3-html-table bp3-html-table-bordered bp3-html-table-condensed bp3-html-table-striped ">
+            <table align="center" class="bp3-html-table bp3-html-table-bordered bp3-html-table-condensed bp3-html-table-striped ">
                 <thead>
                     <tr>
                         <th>S.No.</th>
@@ -142,7 +176,7 @@ const ProductList = () => {
                         <td>{manageDateFormat(item.addedDate)}</td>
                         <td>{manageDateFormat(item.estimatedDate)}</td>
                         <td>{manageDateFormat(item.closedDate)}</td>
-                        <td><Icon icon="edit" onClick={() => setDialog(true, "edit", item)} /></td>
+                        <td><Icon icon="edit" onClick={() => setDialog(true, "edit", item, idx)} /></td>
                     </tr>
                     ))}
                 </tbody>
@@ -153,6 +187,7 @@ const ProductList = () => {
                 onClose={() => setDialog(false, 'read', {})}
                 title={objData.title}
                 isOpen={objData.isOpen}
+                shouldCloseOnOverlayClickbool={false}
             >
                 <div className={Classes.DIALOG_BODY}>
                     <div class="bp3-form-group bp3-inline">
@@ -213,7 +248,7 @@ const ProductList = () => {
                         </div>
                     </div>
                     <div>
-                        <Button intent="primary" className="float-right" text="Save" onClick={saveProduct} />
+                        <Button intent="primary" className="float-right" text="Save" onClick={saveProject} />
                     </div>
 
                 </div>
@@ -222,4 +257,4 @@ const ProductList = () => {
     )
 }
 
-export default React.memo(ProductList);
+export default ProjectList;
