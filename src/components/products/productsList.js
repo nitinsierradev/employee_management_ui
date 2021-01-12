@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "react-apollo";
 
-import { Icon, Dialog, Classes, Button, Code, H5, Intent, Switch, Tooltip, Card } from "@blueprintjs/core";
-import { IconNames } from "@blueprintjs/icons";
+import { Icon, Dialog, Classes, Button, Card } from "@blueprintjs/core";
 
 import { QUERY_PROJECTS, MUTATION_ADD_PROJECT, MUTATION_UPDATE_PROJECT } from "../../core/queries";
-import { isOpen } from "@blueprintjs/core/lib/esm/components/context-menu/contextMenu";
 
 const ProjectList = () => {
     const initialVal = {
@@ -152,6 +150,7 @@ const ProjectList = () => {
     }
     return (
         <Card className="parent-div">
+            <h3 className="text-align-center">Project List</h3>
             <div className="display-flow-root">
                 <Button intent="primary" icon="add" text="Add Project" className="float-right" onClick={() => setDialog(true, 'add', {phase:"PI"}, -1)} />
             </div>
@@ -190,12 +189,13 @@ const ProjectList = () => {
                 shouldCloseOnOverlayClickbool={false}
             >
                 <div className={Classes.DIALOG_BODY}>
+                    <div className="container">
                     <div class="bp3-form-group bp3-inline">
-                        <label className="bp3-label" for="name">
+                        <label className="bp3-label col-md-4" for="name">
                             Name
                             <span className="bp3-text-muted">(required)</span>
                         </label>
-                        <div className="bp3-form-content">
+                        <div className="bp3-form-content col-md-8">
                             <div className="bp3-input-group">
 
                                 <input id="name" name="name" type="text" className="bp3-input"
@@ -205,11 +205,11 @@ const ProjectList = () => {
                         </div>
                     </div>
                     <div class="bp3-form-group bp3-inline">
-                        <label className="bp3-label" for="phase">
+                        <label className="bp3-label col-md-4" for="phase">
                             Phase
                             <span className="bp3-text-muted">(required)</span>
                         </label>
-                        <div className="bp3-form-content">
+                        <div className="bp3-form-content col-md-8">
                             <div className="bp3-input-group">
 
                                 <select id="phase" name="phase" value={objData.data.phase} onChange={onChangeProject}>
@@ -224,11 +224,11 @@ const ProjectList = () => {
                         </div>
                     </div>
                     <div class="bp3-form-group bp3-inline">
-                        <label className="bp3-label" for="estimatedDate">
+                        <label className="bp3-label col-md-4" for="estimatedDate">
                             Estimated Date
                             <span className="bp3-text-muted">(required)</span>
                         </label>
-                        <div className="bp3-form-content">
+                        <div className="bp3-form-content col-md-8">
                             <div className="bp3-input-group">
                                 <input id="estimatedDate" name="estimatedDate" type="date" className="bp3-input"
                                     placeholder="Placeholder text" value={objData.data.estimatedDate} onChange={onChangeProject} />
@@ -237,11 +237,11 @@ const ProjectList = () => {
                         </div>
                     </div>
                     <div class="bp3-form-group bp3-inline">
-                        <label className="bp3-label" for="description">
+                        <label className="bp3-label col-md-4" for="description">
                             Description
                             <span className="bp3-text-muted">(required)</span>
                         </label>
-                        <div className="bp3-form-content">
+                        <div className="bp3-form-content col-md-8">
                             <div className="bp3-input-group">
                                 <textarea id="description" name="description" value={objData.data.description} onChange={onChangeProject}></textarea>
                             </div>
@@ -249,6 +249,7 @@ const ProjectList = () => {
                     </div>
                     <div>
                         <Button intent="primary" className="float-right" text="Save" onClick={saveProject} />
+                    </div>
                     </div>
 
                 </div>

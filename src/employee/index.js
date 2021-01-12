@@ -3,7 +3,7 @@ import { useQuery, useMutation } from 'react-apollo';
 import { gql } from 'apollo-boost';
 import "@blueprintjs/table/lib/css/table.css";
 import { useState } from 'react';
-import { Dialog, Classes, Button, Card } from "@blueprintjs/core";
+import { Dialog, Classes, Button, Card, Icon } from "@blueprintjs/core";
 
 const QUERY_USERS = gql`
   query {
@@ -49,9 +49,9 @@ mutation createEmployee($dob:String!, $email: String!,$empId: String!,$firstName
 
 
 export const MUTATION_UPDATE_USER = gql`
-    mutation updateEmployee($id:ID!, $dob:String, $email: String!,$empId: String!,$firstName: String!,$lastName: String!,$mobileNo: String!,$project: String!) {
+    mutation updateEmployee($id:ID!, $dob:String!, $email: String!,$empId: String!,$firstName: String!,$lastName: String!,$mobileNo: String!,$project: String!) {
       updateEmployee(id:$id, dob: $dob, email: $email,empId: $empId,firstName:$firstName,lastName: $lastName,mobileNo: $mobileNo,project: $project){
-        allEmployee{
+        employee{
           id
           firstName
           lastName
@@ -78,8 +78,9 @@ const UserInfo = () => {
   // your server by causing a query to execute periodically
   // at a specified interval
   const [objData, updateObjectData] = useState(initialVal)
+  const [dataList, setDataList] = useState([]);
   //const { loading,data }  = useQuery(QUERY_PROJECT);
-  const { loading, data } = useQuery(QUERY_USERS);
+  const { loading, data, error } = useQuery(QUERY_USERS);
   const [createUser, userData] = useMutation(MUTATION_ADD_USER);
   const [updateUser, updateUserData] = useMutation(MUTATION_UPDATE_USER);
 
@@ -99,6 +100,17 @@ const UserInfo = () => {
       reqData["password"] = item.password;
       createUser({ variables: reqData }).then(response => {
         setDialog(false, 'read', {});
+        let createItem = response.data.createEmployee.employee;
+        let tempItem = {...reqData};
+        tempItem["project"] = createItem["project"];
+        tempItem["id"] = createItem["id"];
+        // setTimeout(() => {
+          data.allEmployee.push(tempItem);
+        // }, 10)
+        
+        setTimeout(() => {
+          setDataList(prevState => [...prevState, tempItem]);
+      }, 10)
       })
         .catch(err => {
           //handle error
@@ -134,18 +146,51 @@ const UserInfo = () => {
         action: action,
         title: title
     }
-    if(updatedObj.data.estimatedDate){
-        updatedObj.data.estimatedDate = new Date(updatedObj.data.estimatedDate);
+    if(updatedObj.data && updatedObj.data.project && updatedObj.data.project.id){
+      updatedObj.data.project = updatedObj.data.project.id;
     }
+    if(updatedObj.data.dob){
+      let dt = new Date(updatedObj.data.dob);
+      let day = dt.getDate();
+      let month = (dt.getMonth() + 1);
+      if (day < 10) {
+          day = "0" + day
+      }
+      if (month < 10) {
+          month = "0" + month
+      }
+      updatedObj.data.dob =  dt.getFullYear() + "-" + month + "-" + day;
+    }
+      
     updateObjectData(updatedObj);
     // setAction(action);
 }
 
+const manageDateFormat = d => {
+  if (!d) return "";
+  let dt = new Date(d);
+  let day = dt.getDate();
+  let month = (dt.getMonth() + 1);
+  if (day < 10) {
+      day = "0" + day
+  }
+  if (month < 10) {
+      month = "0" + month
+  }
+  return day + "-" + month + "-" + dt.getFullYear();
+}
 
+if (!loading && !error && data && data.allEmployee) {
+  setTimeout(() => {
+      setDataList(data.allEmployee);
+  }, 0)
+
+}
 
   if (loading) return (<div>Loading......</div>);
-  return <Card>
-    <div align="right"><Button intent="primary" text="Add Employee" onClick={() => setDialog(true, 'add', {})} /></div>
+  return <Card className="parent-div">
+    <h3 className="text-align-center">Employee List</h3>
+    <div align="right"><Button intent="primary" icon="add" text="Add Employee" onClick={() => setDialog(true, 'add', {})} /></div>
     <table align='center' className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped .modifier">
       <thead>
         <tr>
@@ -161,22 +206,22 @@ const UserInfo = () => {
       </thead>
       <tbody>
 
-        {data.allEmployee.map((user) => (
+        {dataList.map((user) => (
           <tr>
             <td>{user.firstName}</td>
             <td>{user.lastName}</td>
             <td>{user.email}</td>
             <td>{user.empId}</td>
-            <td>{user.dob}</td>
+            <td>{manageDateFormat(user.dob)}</td>
             <td>{user.mobileNo}</td>
             <td>{user.project.name}</td>
-            <td><Button intent="success" text="Edit" onClick={()=>setDialog(true, 'edit', user)} /></td>
+            <td><Icon icon="edit" onClick={() => setDialog(true, "edit", {...user})} /></td>
           </tr>
         ))}
       </tbody>
     </table>
     <Dialog
-      style={{ width: "auto", height: "auto" }}
+      style={{ width: "400", height: "auto" }}
       icon="application"
       onClose={() => setDialog(false, 'read', {})}
       title={objData.title}
@@ -184,7 +229,7 @@ const UserInfo = () => {
     >
       <div className={Classes.DIALOG_BODY}>
         <div className="container">
-          <div className="row justify-content-center">
+          <div className="row form-group justify-content-center">
             <div className="col-md-4">
               <label for="staticEmail" className="col-sm-2 col-form-label">FirstName</label>
             </div>
@@ -192,7 +237,7 @@ const UserInfo = () => {
               <input type="text" name="firstName" className="form-control" id="staticEmail" value={objData.data.firstName} onChange={onChangeUser} />
             </div>
           </div>
-          <div className="row">
+          <div className="row form-group">
             <div className="col-md-4">
               <label for="lastname" className="col-sm-2 col-form-label">LastName</label>
             </div>
@@ -200,7 +245,7 @@ const UserInfo = () => {
               <input value={objData.data.lastName} onChange={onChangeUser} type="text" name="lastName" className="form-control" id="inputPassword" />
             </div>
           </div>
-          <div className="row">
+          <div className="row form-group">
             <div className="col-md-4">
               <label for="email" className="col-sm-2 col-form-label">Email</label>
             </div>
@@ -208,7 +253,7 @@ const UserInfo = () => {
               <input value={objData.data.email} onChange={onChangeUser} type="text" name="email" className="form-control" id="inputPassword" />
             </div>
           </div>
-          <div className="row">
+          <div className="row form-group">
             <div className="col-md-4">
               <label for="empId" className="col-sm-2 col-form-label">Emp Id</label>
             </div>
@@ -217,7 +262,7 @@ const UserInfo = () => {
             </div>
           </div>
           {!objData.data.id ?
-            <div className="row">
+            <div className="row form-group">
             <div className="col-md-4">
               <label for="passwoerd" className="col-sm-2 col-form-label">Password</label>
             </div>
@@ -227,7 +272,7 @@ const UserInfo = () => {
           </div>: ""
           }
           
-          <div className="row">
+          <div className="row form-group">
             <div className="col-md-4">
               <label for="mobile" className="col-sm-2 col-form-label">Mobile</label>
             </div>
@@ -235,7 +280,7 @@ const UserInfo = () => {
               <input value={objData.data.mobileNo} onChange={onChangeUser} type="text" name="mobileNo" className="form-control" id="inputPassword" />
             </div>
           </div>
-          <div className="row">
+          <div className="row form-group">
             <div className="col-md-4">
               <label for="dob" className="col-sm-2 col-form-label">Dob</label>
             </div>
@@ -243,7 +288,7 @@ const UserInfo = () => {
               <input value={objData.data.dob} onChange={onChangeUser} type="date" name="dob" className="form-control" id="dob" />
             </div>
           </div>
-          <div className="row">
+          <div className="row form-group">
             <div className="col-md-4">
               <label for="inputPassword" className="col-sm-2 col-form-label">Project</label>
             </div>
@@ -255,7 +300,9 @@ const UserInfo = () => {
               </select>
             </div>
           </div>
-          <Button text="Save" intent="primary" onClick={saveUser} />
+          <div>
+            <Button text="Save" intent="primary" className="float-right" onClick={saveUser}  />
+          </div>
         </div>
       </div>
     </Dialog>

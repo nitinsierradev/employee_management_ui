@@ -27,3 +27,10 @@ code {
 .bp3-portal{
   pointer-events: none;
 }
+.text-align-center{
+  text-align: center;
+}
+.bp3-navbar-group button a {
+  color: #ffffff;
+  text-decoration: none;
+}
